@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Unity.Robotics.ROSTCPConnector.MessageGeneration;
+#if !ROS2
 using RosMessageTypes.Std;
 using RosMessageTypes.Actionlib;
+#endif
 
 namespace RosMessageTypes.Nav
 {
@@ -16,10 +18,17 @@ namespace RosMessageTypes.Nav
             this.result = new GetMapResult();
         }
 
+#if !ROS2
         public GetMapActionResult(HeaderMsg header, GoalStatusMsg status, GetMapResult result) : base(header, status)
         {
             this.result = result;
         }
+#else
+        public GetMapActionResult(sbyte status, GetMapResult result) : base(status)
+        {
+            this.result = result;
+        }
+#endif
         public static GetMapActionResult Deserialize(MessageDeserializer deserializer) => new GetMapActionResult(deserializer);
 
         GetMapActionResult(MessageDeserializer deserializer) : base(deserializer)
@@ -28,7 +37,9 @@ namespace RosMessageTypes.Nav
         }
         public override void SerializeTo(MessageSerializer serializer)
         {
+#if !ROS2
             serializer.Write(this.header);
+#endif
             serializer.Write(this.status);
             serializer.Write(this.result);
         }

@@ -13,11 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#if !ROS2
 using RosMessageTypes.Actionlib;
 using RosMessageTypes.Std;
+#else
+using RosMessageTypes.UniqueIdentifier;
+#endif
 
 namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
 {
+#if !ROS2
+    // ROS1 ActionFeedback structure
     public abstract class ActionFeedback<TFeedback> : Message where TFeedback : Message
     {
         public HeaderMsg header { get; set; }
@@ -42,4 +48,27 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
             this.status = GoalStatusMsg.Deserialize(deserializer);
         }
     }
+#else
+    // ROS2 ActionFeedback structure - feedback messages include the goal UUID
+    public abstract class ActionFeedback<TFeedback> : Message where TFeedback : Message
+    {
+        public UUIDMsg goal_id { get; set; }
+        public TFeedback feedback { get; set; }
+
+        public ActionFeedback()
+        {
+            goal_id = new UUIDMsg();
+        }
+
+        public ActionFeedback(UUIDMsg goal_id)
+        {
+            this.goal_id = goal_id;
+        }
+
+        protected ActionFeedback(MessageDeserializer deserializer)
+        {
+            this.goal_id = UUIDMsg.Deserialize(deserializer);
+        }
+    }
+#endif
 }

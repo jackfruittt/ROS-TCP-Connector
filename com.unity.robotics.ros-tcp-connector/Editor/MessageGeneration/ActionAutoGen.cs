@@ -208,33 +208,70 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
             string paramsOut = "";
             string assignments = "";
 
+            // ROS1 vs ROS2 have different base class parameters
+            constructor += "#if !ROS2\n";
             if (msgType.Equals("Goal"))
             {
-                paramsIn += "HeaderMsg header, GoalIDMsg goal_id, ";
-                paramsOut += "header, goal_id";
+                paramsIn = "HeaderMsg header, GoalIDMsg goal_id, ";
+                paramsOut = "header, goal_id";
             }
             else if (msgType.Equals("Result") || msgType.Equals("Feedback"))
             {
-                paramsIn += "HeaderMsg header, GoalStatusMsg status, ";
-                paramsOut += "header, status";
+                paramsIn = "HeaderMsg header, GoalStatusMsg status, ";
+                paramsOut = "header, status";
             }
-
+            
+            string ros1ParamsIn = paramsIn;
             foreach (string identifier in symbolTable.Keys)
             {
                 string type = symbolTable[identifier];
-                paramsIn += type + " " + identifier + ", ";
-                assignments += TWO_TABS + ONE_TAB + "this." + identifier + " = " + identifier + ";\n";
+                ros1ParamsIn += type + " " + identifier + ", ";
             }
-
-            if (!paramsIn.Equals(""))
+            if (!ros1ParamsIn.Equals(""))
             {
-                paramsIn = paramsIn.Substring(0, paramsIn.Length - 2);
+                ros1ParamsIn = ros1ParamsIn.Substring(0, ros1ParamsIn.Length - 2);
             }
-
-            constructor += TWO_TABS + "public " + className + "(" + paramsIn + ") : base(" + paramsOut + ")\n";
+            
+            constructor += TWO_TABS + "public " + className + "(" + ros1ParamsIn + ") : base(" + paramsOut + ")\n";
             constructor += TWO_TABS + "{\n";
-            constructor += assignments;
+            foreach (string identifier in symbolTable.Keys)
+            {
+                constructor += TWO_TABS + ONE_TAB + "this." + identifier + " = " + identifier + ";\n";
+            }
             constructor += TWO_TABS + "}\n";
+            
+            constructor += "#else\n";
+            // ROS2 parameters
+            if (msgType.Equals("Goal") || msgType.Equals("Feedback"))
+            {
+                paramsIn = "UUIDMsg goal_id, ";
+                paramsOut = "goal_id";
+            }
+            else if (msgType.Equals("Result"))
+            {
+                paramsIn = "sbyte status, ";
+                paramsOut = "status";
+            }
+            
+            string ros2ParamsIn = paramsIn;
+            foreach (string identifier in symbolTable.Keys)
+            {
+                string type = symbolTable[identifier];
+                ros2ParamsIn += type + " " + identifier + ", ";
+            }
+            if (!ros2ParamsIn.Equals(""))
+            {
+                ros2ParamsIn = ros2ParamsIn.Substring(0, ros2ParamsIn.Length - 2);
+            }
+            
+            constructor += TWO_TABS + "public " + className + "(" + ros2ParamsIn + ") : base(" + paramsOut + ")\n";
+            constructor += TWO_TABS + "{\n";
+            foreach (string identifier in symbolTable.Keys)
+            {
+                constructor += TWO_TABS + ONE_TAB + "this." + identifier + " = " + identifier + ";\n";
+            }
+            constructor += TWO_TABS + "}\n";
+            constructor += "#endif\n";
 
             return constructor;
         }
@@ -273,23 +310,29 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
             function += TWO_TABS + "public override void SerializeTo(MessageSerializer serializer)\n";
             function += TWO_TABS + "{\n";
 
-            string[] inheritedParams = new string[0];
-
-            // Inherited params
+            // ROS1 inherited params
+            function += "#if !ROS2\n";
             if (msgType.Equals("Goal"))
             {
-                inheritedParams = new[] { "header", "goal_id" };
-
+                function += THREE_TABS + "serializer.Write(this.header);\n";
+                function += THREE_TABS + "serializer.Write(this.goal_id);\n";
             }
             else if (msgType.Equals("Result") || msgType.Equals("Feedback"))
             {
-                inheritedParams = new[] { "header", "status" };
+                function += THREE_TABS + "serializer.Write(this.header);\n";
+                function += THREE_TABS + "serializer.Write(this.status);\n";
             }
-
-            foreach (string paramName in inheritedParams)
+            function += "#else\n";
+            // ROS2 inherited params
+            if (msgType.Equals("Goal") || msgType.Equals("Feedback"))
             {
-                function += THREE_TABS + "serializer.Write(this." + paramName + ");\n";
+                function += THREE_TABS + "serializer.Write(this.goal_id);\n";
             }
+            else if (msgType.Equals("Result"))
+            {
+                function += THREE_TABS + "serializer.Write(this.status);\n";
+            }
+            function += "#endif\n";
 
             foreach (string identifier in symbolTable.Keys)
             {
@@ -308,11 +351,17 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
 
             string outPath = Path.Combine(this.outPath, wrapperName + ".cs");
 
+            // Different imports for ROS1 vs ROS2
             string imports =
                 "using System.Collections.Generic;\n" +
                 "using Unity.Robotics.ROSTCPConnector.MessageGeneration;\n" +
+                "#if !ROS2\n" +
                 "using RosMessageTypes.Std;\n" +
-                "using RosMessageTypes.Actionlib;\n\n";
+                "using RosMessageTypes.Actionlib;\n" +
+                "#else\n" +
+                "using RosMessageTypes.UniqueIdentifier;\n" +
+                "using RosMessageTypes.ActionMsgs;\n" +
+                "#endif\n\n";
 
             symbolTable = new Dictionary<string, string>();
 

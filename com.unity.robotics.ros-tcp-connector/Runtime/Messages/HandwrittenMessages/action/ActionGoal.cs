@@ -13,11 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#if !ROS2
 using RosMessageTypes.Actionlib;
 using RosMessageTypes.Std;
+#else
+using RosMessageTypes.UniqueIdentifier;
+#endif
 
 namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
 {
+#if !ROS2
+    // ROS1 ActionGoal structure
     public abstract class ActionGoal<TGoal> : Message where TGoal : Message
     {
         public HeaderMsg header { get; set; }
@@ -42,4 +48,27 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
             this.goal_id = GoalIDMsg.Deserialize(deserializer);
         }
     }
+#else
+    // ROS2 ActionGoal structure (simplified - goal is sent directly in SendGoal request)
+    public abstract class ActionGoal<TGoal> : Message where TGoal : Message
+    {
+        public UUIDMsg goal_id { get; set; }
+        public TGoal goal { get; set; }
+
+        public ActionGoal()
+        {
+            goal_id = new UUIDMsg();
+        }
+
+        public ActionGoal(UUIDMsg goal_id)
+        {
+            this.goal_id = goal_id;
+        }
+
+        protected ActionGoal(MessageDeserializer deserializer)
+        {
+            this.goal_id = UUIDMsg.Deserialize(deserializer);
+        }
+    }
+#endif
 }

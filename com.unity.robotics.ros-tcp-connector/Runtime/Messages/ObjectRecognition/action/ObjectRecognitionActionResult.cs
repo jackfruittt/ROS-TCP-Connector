@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Unity.Robotics.ROSTCPConnector.MessageGeneration;
+#if !ROS2
 using RosMessageTypes.Std;
 using RosMessageTypes.Actionlib;
+#endif
 
 namespace RosMessageTypes.ObjectRecognition
 {
@@ -16,10 +18,17 @@ namespace RosMessageTypes.ObjectRecognition
             this.result = new ObjectRecognitionResult();
         }
 
+#if !ROS2
         public ObjectRecognitionActionResult(HeaderMsg header, GoalStatusMsg status, ObjectRecognitionResult result) : base(header, status)
         {
             this.result = result;
         }
+#else
+        public ObjectRecognitionActionResult(sbyte status, ObjectRecognitionResult result) : base(status)
+        {
+            this.result = result;
+        }
+#endif
         public static ObjectRecognitionActionResult Deserialize(MessageDeserializer deserializer) => new ObjectRecognitionActionResult(deserializer);
 
         ObjectRecognitionActionResult(MessageDeserializer deserializer) : base(deserializer)
@@ -28,7 +37,9 @@ namespace RosMessageTypes.ObjectRecognition
         }
         public override void SerializeTo(MessageSerializer serializer)
         {
+#if !ROS2
             serializer.Write(this.header);
+#endif
             serializer.Write(this.status);
             serializer.Write(this.result);
         }

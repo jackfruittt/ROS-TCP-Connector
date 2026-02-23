@@ -9,11 +9,11 @@ namespace RosMessageTypes.BuiltinInterfaces
     public class DurationMsg : Message
     {
 #if !ROS2
-        public const string k_RosMessageName = "builtin_interfaces/Duration";
+        public const string k_RosMessageName = "std_msgs/Duration";
         public override string RosMessageName => k_RosMessageName;
 
         public int sec;
-        public int nanosec;
+        public uint nanosec;
 
         public DurationMsg()
         {
@@ -21,7 +21,7 @@ namespace RosMessageTypes.BuiltinInterfaces
             this.nanosec = 0;
         }
 
-        public DurationMsg(int sec, int nanosec)
+        public DurationMsg(int sec, uint nanosec)
         {
             this.sec = sec;
             this.nanosec = nanosec;

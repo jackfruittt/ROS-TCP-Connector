@@ -90,6 +90,8 @@ namespace Unity.Robotics.ROSTCPConnector
             }
 
             Message message = Deserialize(data);
+            if (message == null)
+                return;
 
             m_SubscriberCallbacks.ForEach(item => item(message));
         }
@@ -117,6 +119,8 @@ namespace Unity.Robotics.ROSTCPConnector
 
             // deserialize the request message
             Message requestMessage = Deserialize(data);
+            if (requestMessage == null)
+                return;
 
             // run the actual service
             Message response;
@@ -142,6 +146,12 @@ namespace Unity.Robotics.ROSTCPConnector
         {
             if (m_Deserializer == null)
                 m_Deserializer = MessageRegistry.GetDeserializeFunction(m_RosMessageName, m_Subtopic);
+
+            if (m_Deserializer == null)
+            {
+                Debug.LogError($"Failed to deserialize message on topic '{m_Topic}': No deserializer found for message type '{m_RosMessageName}' (subtopic: {m_Subtopic}). Ensure the message type is registered.");
+                return null;
+            }
 
             m_ConnectionInternal.Deserializer.InitWithBuffer(data);
             return m_Deserializer(m_ConnectionInternal.Deserializer);

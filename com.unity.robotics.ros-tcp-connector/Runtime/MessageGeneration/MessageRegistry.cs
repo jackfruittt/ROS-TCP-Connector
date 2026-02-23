@@ -35,7 +35,38 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
         {
             Func<MessageDeserializer, Message> result;
             s_DeserializeFunctionsByName[(int)subtopic].TryGetValue(rosMessageName, out result);
+            
+            // If not found and ROS2 message name format (pkg/msg/Type or pkg/srv/Type), try ROS1 format (pkg/Type)
+            if (result == null && rosMessageName != null)
+            {
+                string normalizedName = NormalizeMessageName(rosMessageName);
+                if (normalizedName != rosMessageName)
+                {
+                    s_DeserializeFunctionsByName[(int)subtopic].TryGetValue(normalizedName, out result);
+                }
+            }
+            
             return result;
+        }
+
+        /// <summary>
+        /// Converts ROS2 message names (pkg/msg/Type, pkg/srv/Type, pkg/action/Type) 
+        /// to ROS1 format (pkg/Type) for lookup compatibility
+        /// </summary>
+        static string NormalizeMessageName(string rosMessageName)
+        {
+            if (string.IsNullOrEmpty(rosMessageName))
+                return rosMessageName;
+                
+            // Check for ROS2 format: pkg/msg/Type, pkg/srv/Type, or pkg/action/Type
+            string[] parts = rosMessageName.Split('/');
+            if (parts.Length == 3 && (parts[1] == "msg" || parts[1] == "srv" || parts[1] == "action"))
+            {
+                // Convert to ROS1 format: pkg/Type
+                return parts[0] + "/" + parts[2];
+            }
+            
+            return rosMessageName;
         }
 
         public static Func<MessageDeserializer, Message> GetDeserializeFunction<T>() where T : Message

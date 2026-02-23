@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Unity.Robotics.ROSTCPConnector.MessageGeneration;
+#if !ROS2
 using RosMessageTypes.Std;
 using RosMessageTypes.Actionlib;
+#endif
 
 namespace RosMessageTypes.Tf2
 {
@@ -16,10 +18,17 @@ namespace RosMessageTypes.Tf2
             this.result = new LookupTransformResult();
         }
 
+#if !ROS2
         public LookupTransformActionResult(HeaderMsg header, GoalStatusMsg status, LookupTransformResult result) : base(header, status)
         {
             this.result = result;
         }
+#else
+        public LookupTransformActionResult(sbyte status, LookupTransformResult result) : base(status)
+        {
+            this.result = result;
+        }
+#endif
         public static LookupTransformActionResult Deserialize(MessageDeserializer deserializer) => new LookupTransformActionResult(deserializer);
 
         LookupTransformActionResult(MessageDeserializer deserializer) : base(deserializer)
@@ -28,7 +37,9 @@ namespace RosMessageTypes.Tf2
         }
         public override void SerializeTo(MessageSerializer serializer)
         {
+#if !ROS2
             serializer.Write(this.header);
+#endif
             serializer.Write(this.status);
             serializer.Write(this.result);
         }

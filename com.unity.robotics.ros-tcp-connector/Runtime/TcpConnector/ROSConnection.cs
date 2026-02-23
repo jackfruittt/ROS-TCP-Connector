@@ -15,8 +15,8 @@ namespace Unity.Robotics.ROSTCPConnector
 {
     public class ROSConnection : MonoBehaviour
     {
-        public const string k_Version = "v0.7.0";
-        public const string k_CompatibleVersionPrefix = "v0.7.";
+        public const string k_Version = "v0.8.0";
+        public const string k_CompatibleVersionPrefix = "v0.7."; // Accept v0.7.x endpoints for backwards compatibility
 
         // Variables required for ROS communication
         [SerializeField]

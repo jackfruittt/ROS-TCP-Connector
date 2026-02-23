@@ -13,12 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
+#if !ROS2
 using RosMessageTypes.Actionlib;
 using RosMessageTypes.Std;
+#else
+using RosMessageTypes.ActionMsgs;
+#endif
 
 namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
 {
+#if !ROS2
+    // ROS1 ActionResult structure
     public abstract class ActionResult<TResult> : Message where TResult : Message
     {
         public HeaderMsg header { get; set; }
@@ -43,4 +48,29 @@ namespace Unity.Robotics.ROSTCPConnector.MessageGeneration
             this.status = GoalStatusMsg.Deserialize(deserializer);
         }
     }
+#else
+    // ROS2 ActionResult structure - GetResult response includes status code
+    public abstract class ActionResult<TResult> : Message where TResult : Message
+    {
+        // Status codes matching action_msgs/GoalStatus
+        public sbyte status { get; set; }
+        public TResult result { get; set; }
+
+        public ActionResult()
+        {
+            status = GoalStatusMsg.STATUS_UNKNOWN;
+        }
+
+        public ActionResult(sbyte status)
+        {
+            this.status = status;
+        }
+
+        protected ActionResult(MessageDeserializer deserializer)
+        {
+            deserializer.Read(out sbyte statusValue);
+            this.status = statusValue;
+        }
+    }
+#endif
 }

@@ -5,21 +5,29 @@ All notable changes to this repository will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-## Unreleased
+## [0.8.0-preview] - 2026-02-20
 
 ### Upgrade Notes
 
-### Known Issues
+This version adds full support for ROS2 Humble. To use ROS2, select "ROS2" from the Robotics/ROS Settings menu in Unity.
 
 ### Added
 
+- Full ROS2 Humble support
+- Added `unique_identifier_msgs/UUID` message type for ROS2 action goal identification
+- Added `action_msgs` package with `GoalInfo`, `GoalStatus`, `GoalStatusArray`, and `CancelGoal` service
+- ROS2-compatible action base classes (`ActionGoal`, `ActionFeedback`, `ActionResult`)
+
 ### Changed
 
-### Deprecated
-
-### Removed
+- Action code generation now produces ROS2-compatible code with `#if ROS2` preprocessor directives
+- Updated action base classes to use `UUIDMsg` instead of `GoalIDMsg` for ROS2
 
 ### Fixed
+
+- Fixed `DurationMsg` ROS1 message name (was incorrectly `builtin_interfaces/Duration`, now `std_msgs/Duration`)
+- Fixed `DurationMsg` ROS1 nanosec field type (was `int`, now `uint`)
+- Added null check in `RosTopicState.Deserialize()` to prevent `NullReferenceException` when message type is not registered
 
 
 ## [0.7.0-preview] - 2022-02-01
